@@ -6,6 +6,8 @@ import zipfile
 import mimetypes
 
 def lambda_handler(event, context):
+    sns = boto3.resource('sns')
+    topic = sns.Topic('arn:aws:sns:ap-southeast-2:774983433151:deployServerless')
     s3 = boto3.resource('s3', config=Config(signature_version='s3v4'))
     
     serverless_bucket = s3.Bucket('fipjip.com')
@@ -20,6 +22,7 @@ def lambda_handler(event, context):
             serverless_bucket.upload_fileobj(obj,nm,
                 ExtraArgs={'ContentType': mimetypes.guess_type(nm)[0]})
             serverless_bucket.Object(nm).Acl().put(ACL='public-read')
+    topic.publish(Subject="Lambda Message", Message="Serverless deployed successfully!")
     return {
         'statusCode': 200,
         'body': json.dumps('Hello from Lambda!')
